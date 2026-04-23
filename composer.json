@@ -1,0 +1,20 @@
+
+{
+    "name" : "BlackSheep-01/indeed",
+
+    "description" : "Job listing application",
+
+    "author" : [
+        {
+            "name": "Nilkanta Roy",
+            "email": "roynilkanta2000@gmail.com"
+        }
+    ],
+
+    "autoload" : {
+        "psr-4": {
+            "Framework\\": "Framework/",
+            "App\\": "App/",
+        }
+    }
+}
