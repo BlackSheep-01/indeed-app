@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Get the absolute path of any file
+ * get absolute path of any file
  * @param string $path
  * @return string
  */
@@ -10,11 +10,10 @@ function basePath($path= ""){
 }
 
 /**
- * Load a view
+ * load a view
  * @param string $name
  * @return void
  */
-/* extract(): build in function which takes an associative array and converts only its topmost level key:val pairs into variables and corresponding values */
 function loadView($name, $data= []){
     $viewPath = basePath("App/views/{$name}.view.php");
     if(file_exists($viewPath)){
@@ -25,18 +24,46 @@ function loadView($name, $data= []){
         echo "View not found";
     }
 }
+/* extract(): build in function which takes an associative array and converts only its topmost level key:val pairs into variables and corresponding values 
+   eg:  [ 'listings'=>[assoc arr....] ]  -> extract() ->   $listings=[assoc arr..]  */
 
 /**
- * Load a partial
+ * load a partial
  * @param string $name
  * @return void
  */
-function loadPartial($name){
-    require basePath("App/views/partials/{$name}.php");
+function loadPartial($name, $data= []){
+    $partialPath = basePath("App/views/partials/{$name}.php");
+    if (file_exists($partialPath)) {
+        extract($data);
+        require $partialPath;
+    } else {
+        echo "View not found";
+    }
 }
 
 /**
- * Print values
+ * sanitize user input data
+ * @param string $dirty
+ * @return string
+ */
+function sanitize($dirty){
+    return filter_var(trim($dirty), FILTER_SANITIZE_SPECIAL_CHARS);
+}
+
+/**
+ * redirect to given url
+ * @param string $url
+ * @return void
+ */
+function redirect($url){
+    header("Location: {$url}");
+    exit;
+}
+
+
+/**
+ * print values
  * @param mixed $value
  * @return void
  */
@@ -52,6 +79,3 @@ function inspectAndDie($value){
     echo "</pre>";
     die();
 }
-
-
-

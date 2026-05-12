@@ -1,90 +1,132 @@
 <?php
+namespace Framework;
+
+use App\Controllers\ErrorController;
+use Framework\Middleware\Authorize;
+
 
 class Router
 {
     protected $routes = [];
 
-    /** 
-     * routes = [ [.....] ,
-     *            [ "method" => "GET",
-     *              "uri" => "/listings",
-     *              "controller" => "controllers/listings/index.php"
-     *            ] ,
-     *           [.....]
-     *        ]
+    /**
+     * @param string $uri
+     * @param string $method
+     * @param string $action
+     * @param array $middleware
+     * @return void
      */
-    public function registerRoute($method, $uri, $controller){
+    public function registerRoute($method, $uri, $action, $middleware= []){
+        list($controller, $controllerMethod) = explode("@", $action);    //eg: "ListingController@update"  ->  ["ListingController", "update"]  ->  $controller= "ListingController", $controllerMethod= "update" 
         $this->routes[] = [         //add all routes (from routes.php) to array
             "method" => $method,
             "uri" => $uri,
-            "controller" => $controller
+            "controller" => $controller,
+            "controllerMethod" => $controllerMethod,
+            "middleware" => $middleware
         ];
     }
+    /*
+    routes = [ [.....] ,
+                [ "method" => "PUT",
+                  "uri" => "/listings/{id}",
+                  "controller" => "ListingController",
+                  "controllerMethod" => "update",
+                  "middleware" => ["auth"]
+                ] 
+            ]
+    */
+
 
     /**
-     * add route for GET request
+     * add Get route
      * @param string $uri
-     * @param string $controller
+     * @param string $action
+     * @param array $middleware
      * @return void
      */
-    public function get($uri, $controller){
-        $this->registerRoute("GET", $uri, $controller);
+    public function get($uri, $action, $middleware= []){
+        $this->registerRoute("GET", $uri, $action, $middleware);
     }
 
     /**
-     * add route for POST request
+     * add Post route
      * @param string $uri
-     * @param string $controller
+     * @param string $action
+     * @param array $middleware
      * @return void
      */
-    public function post($uri, $controller) {
-        $this->registerRoute("POST", $uri, $controller);
+    public function post($uri, $action, $middleware = []) {
+        $this->registerRoute("POST", $uri, $action, $middleware);
     }
 
     /**
-     * add route for PUT request
+     * add Put route
      * @param string $uri
-     * @param string $controller
+     * @param string $action
+     * @param array $middleware
      * @return void
      */
-    public function put($uri, $controller) {
-        $this->registerRoute("PUT", $uri, $controller);
+    public function put($uri, $action, $middleware = []) {
+        $this->registerRoute("PUT", $uri, $action, $middleware);
     }
 
     /**
-     * add route for DELETE request
+     * add Delete route
      * @param string $uri
-     * @param string $controller
+     * @param string $action
+     * @param array $middleware
      * @return void
      */
-    public function delete($uri, $controller) {
-        $this->registerRoute("DELETE", $uri, $controller);
+    public function delete($uri, $action, $middleware = []) {
+        $this->registerRoute("DELETE", $uri, $action, $middleware);
     }
 
-    /**
-     * load error page
-     * @param int $httpCode
-     * @return void
-     */
-    public function error($httpCode = 404){
-        http_response_code($httpCode);
-        loadView("error/{$httpCode}");
-        exit;
-    }
-
+    
     /**
      * route the request
      * @param string $uri
-     * @param string $method
      * @return void
      */
-    public function route($method, $uri){
+    public function route($uri){
+        $requestMethod = $_SERVER["REQUEST_METHOD"];       //returns the http method: GET/POST/PUT/DELETE req
+        if($requestMethod === "POST"  &&  isset($_POST["_method"])){      //forms only support GET and POST, so we use hidden input _method to override the method for PUT and DELETE requests
+            $requestMethod = strtoupper($_POST["_method"]);
+        }
         foreach($this->routes as $route){
-            if($route["method"] === $method && $route["uri"] === $uri){
-                require basePath("App/" . $route["controller"]);    
-                return;
+            $uriSegments = explode("/", trim($uri, "/"));       // "/listing/3"  ->  ["listing", "3"]
+            $routeSegments = explode("/", trim($route["uri"], "/"));      // "/listing/{id}"  ->  ["listing", "{id}"]
+            if(count($uriSegments) === count($routeSegments)  &&  strtoupper($route["method"]) === $requestMethod){
+                $params = [];
+                $match = true;
+                for ($i = 0; $i < count($uriSegments); $i++) {
+                    $uriPart = $uriSegments[$i];
+                    $routePart = $routeSegments[$i];
+                    if (str_starts_with($routePart, "{")  &&  str_ends_with($routePart, "}")) {    // check if it's a parameter like {id}
+                        $paramName = trim($routePart, "{}");    // "{id}" -> "id"
+                        $params[$paramName] = $uriPart;        // $params["id"] = "3"
+                    }
+                    elseif ($uriPart !== $routePart) {         // otherwise it must match exactly eg: "listing" === "listing" 
+                        $match = false;
+                        break;
+                    }
+                }
+                if($match){
+                    foreach($route["middleware"] as $role){     // maybe "middleware" => ["auth", "admin", ...]
+                        $authorize = new Authorize();
+                        $authorize->handle($role);        // Middleware check
+                    }
+                    $controller = "App\\Controllers\\" . $route["controller"];
+                    $controllerMethod = $route["controllerMethod"];
+                    $controllerObj = new $controller();
+                    if ( !empty($params))
+                        $controllerObj->$controllerMethod($params);
+                    else
+                        $controllerObj->$controllerMethod();
+                    return;
+                }
             }
         }
-        $this->error();   //if no match in routes array 
+        ErrorController::notFound();    //if route doesnt match
     }
 }

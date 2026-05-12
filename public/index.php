@@ -1,29 +1,26 @@
 <?php
 require "../helpers.php";
-// require basePath("Framework/Database.php");
-// require basePath("Framework/Router.php");
+require __DIR__ . "/../vendor/autoload.php";
 
+use Framework\Database;
+use Framework\Router;
+use Framework\Session;
 
-spl_autoload_register(function($class){
-    $path = basePath("Framework/" . $class . ".php");
-    if(file_exists($path)){
-        require $path;
-    }
-});
+Session::start();
+
 
 /* database */
 $config = require basePath("config/db.php");   //array
-$db = new Database($config);    
+new Database($config);    //
 
 
 /* router */
 $router = new Router();
-$routes = require basePath("routes.php");     //?             
+require basePath("routes.php");     //all available routes registered          
 
 
-/* user request */
-$method = $_SERVER["REQUEST_METHOD"];       //returns the http method: GET/POST/PUT/DELETE 
-$uri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);       //returns url path without query strings
+/* browser request */
+$uri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);       //returns uri path without query strings
 
-/* response to user request via routing */
-$router->route($method, $uri);   
+/* response to request via routing */
+$router->route($uri);   

@@ -7,12 +7,15 @@ loadPartial("top-banner");
 
 <section class="flex justify-center items-center mt-20">
     <div class="bg-white p-8 rounded-lg shadow-md w-full md:w-600 mx-6">
-        <h2 class="text-4xl text-center font-bold mb-4">Create Job Listing</h2>
+        <h2 class="text-4xl text-center font-bold mb-4">Edit Job Listing</h2>
 
-        <form method="POST" action="/listings">
-            <h2 class="text-2xl font-bold mb-6 text-center text-gray-500">Job Info</h2>
-
-            <?php loadPartial("errors", [ "errors"=>$errors ?? [] ]) ?>
+        <form method="POST" action="/listings/<?= $listing["id"] ?>">
+            <input type="hidden" name="_method" value="PUT">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-500">
+                Job Info
+            </h2>
+            
+            <?php loadPartial("errors", ["errors" => $errors ?? []]) ?>
 
             <div class="mb-4">
                 <input
@@ -20,7 +23,7 @@ loadPartial("top-banner");
                     name="title"
                     placeholder="*Job Title"
                     class="w-full px-4 py-2 border rounded focus:outline-none"
-                    value="<?= $listing["title"] ?? '' ?>" />       <!-- refill old values for error -->
+                    value="<?= $listing["title"] ?? '' ?>" />
             </div>
             <div class="mb-4">
                 <textarea
@@ -116,7 +119,7 @@ loadPartial("top-banner");
                 Save
             </button>
             <a
-                href="/"
+                href="/listings/<?= $listing["id"] ?>"
                 class="block text-center w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded focus:outline-none">
                 Cancel
             </a>
@@ -130,14 +133,3 @@ loadPartial("top-banner");
 loadPartial("bottom-banner");
 loadPartial("footer");
 ?>
-
-
-
-<!-- 
-What actually happens -
-1. User fills the form
-2. Clicks submit
-3. Browser sends HTTP request: POST /listings
-4. Your PHP app receives it
-5. Your router handles it using route:   $router->post("/listings", "ListingController@store");
- -->

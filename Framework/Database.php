@@ -1,9 +1,19 @@
 <?php
+namespace Framework;
+
+/* import global classes which are outside namespace */
+use PDO;
+use PDOException;
+use Exception;
+
 
 class Database
 {
     public $conn;
 
+    /**
+     * @param array $config
+     */
     public function __construct($config)
     {
         $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['dbname']}";
@@ -22,17 +32,14 @@ class Database
 
     /**
      * query database
-     * @param string query
-     * @return PDOStatement
+     * @param string $query
+     * @param array $params
      * @throws PDOException
      */
-    public function query($query, $params= []){        //used in home controller
+    public function query($query, $params= []){        
         try{
             $stmt = $this->conn->prepare($query);
-            foreach($params as $param => $value){
-                $stmt->bindValue(":".$param, $value);
-            }
-            $stmt->execute();
+            $stmt->execute($params);
             return $stmt;
         }
         catch(PDOException $e){
