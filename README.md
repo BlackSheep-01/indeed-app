@@ -68,6 +68,7 @@ $router->put("/listings/{id}", "ListingController@update", ["auth"]);
      routes.php
      composer.json
 
+<img width="528" height="1080" alt="Screenshot (279)" src="https://github.com/user-attachments/assets/77a047b4-cad6-41b8-be34-0ae354fb2ddf" />
 
 
 
