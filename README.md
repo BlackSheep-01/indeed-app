@@ -19,7 +19,8 @@ This project was created to deeply understand how backend frameworks work intern
 - Responsive UI with Tailwind CSS
 - Custom Error Handling
 - PDO-based Database Layer with Prepared Statements
-- Entire project is build using Object Oriented Programming
+- Entire project is build using Object Oriented Programming principles
+- User credentials : joseph@gmail.com, pw: 123456
 
 
 ## Tech Stack
